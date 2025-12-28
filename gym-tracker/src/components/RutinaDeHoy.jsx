@@ -1,3 +1,6 @@
+import { ejerciciosPorDia } from "../data/ejercicios";
+import { useState } from "react";
+
 function RutinaDeHoy() {
     const hoy = new Date();
 
@@ -13,17 +16,9 @@ function RutinaDeHoy() {
 
     const diaNombre = dias[hoy.getDay()];
 
-    const rutinasPorDia = {
-        Lunes: ["Pecho", "Tríceps"],
-        Martes: ["Pierna"],
-        Miércoles: ["Hombro", "Antebrazo"],
-        Jueves: ["Espalda", "Bíceps"],
-        Viernes: ["Pierna"],
-        Sábado: ["Descanso"],
-        Domingo: ["Descanso"],
-    };
+    const rutina = ejerciciosPorDia[diaNombre] || ["Descanso"];
 
-    const rutina = rutinasPorDia[diaNombre] || ["Descanso"];
+    const [completados, setCompletados] = useState([])
 
     return (
         <div>
@@ -34,12 +29,31 @@ function RutinaDeHoy() {
 
             <p>Te toca:</p>
             <ul>
-                {rutina.map((item) => (
-                    <li key={item}>{item}</li>
-                ))}
+                {rutina.map((item) => {
+                    const hecho = completados.includes(item)
+                    return (
+                        <li 
+                            key={item}
+                            onClick={() => {
+                            if (hecho) {
+                                    setCompletados(completados.filter((e) => e !== item))
+                                } else {
+                                    setCompletados([...completados, item])
+                                }
+                            }}
+                            style={{
+                                cursor: "pointer",
+                                textDecoration: hecho ? "line-through" : "none",
+                                color: hecho ? "gray" : "white",
+                            }}
+                        >
+                            {hecho ? "✅ " : "⬜ "} {item}
+                        </li>
+                    )
+                })}
             </ul>
         </div>
-    );
+    )
 }
 
 export default RutinaDeHoy;
