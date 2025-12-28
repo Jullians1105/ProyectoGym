@@ -1,7 +1,7 @@
 import { ejerciciosPorDia } from "../data/ejercicios";
-import { useState } from "react";
+import { useEffect,useState } from "react";
 
-function RutinaDeHoy() {
+function RutinaDeHoy({onSaved}) {
     const hoy = new Date();
 
     const dias = [
@@ -16,9 +16,24 @@ function RutinaDeHoy() {
 
     const diaNombre = dias[hoy.getDay()];
 
+    const yyyy = hoy.getFullYear()
+    const mm = String(hoy.getMonth () + 1).padStart (2, "0")
+    const dd = String(hoy.getDate()).padStart(2, "0")
+    const fechaISO = `${yyyy}-${mm}-${dd}` // "2025-06-15"
+    
     const rutina = ejerciciosPorDia[diaNombre] || ["Descanso"];
+    
+    const storageKey = `Dia entreno -${fechaISO}-${diaNombre}`
 
-    const [completados, setCompletados] = useState([])
+    const [completados, setCompletados] = useState (() => {
+        const guardado = localStorage.getItem(storageKey)
+        return guardado ? JSON.parse(guardado) : []
+    })
+
+    useEffect(() => {
+        localStorage.setItem(storageKey, JSON.stringify(completados))
+        if (onSaved) onSaved()
+    }, [storageKey, completados, onSaved])
 
     return (
         <div>
@@ -27,7 +42,16 @@ function RutinaDeHoy() {
                 Hoy es: <strong>{diaNombre}</strong>
             </p>
 
+            <p>
+                Fecha: <strong>{fechaISO}</strong>
+            </p>
+
             <p>Te toca:</p>
+
+            <button onClick={() => setCompletados ([])}>
+                Limpiar check de hoy
+            </button>
+
             <ul>
                 {rutina.map((item) => {
                     const hecho = completados.includes(item)
