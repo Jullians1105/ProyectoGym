@@ -1,6 +1,7 @@
 import  {useState} from "react";
 import RutinaDeHoy from "./components/RutinaDeHoy";
 import Historial from "./components/Historial";
+import Ejercicios from "./components/Ejercicios";
 
 function App() {
 
@@ -14,6 +15,7 @@ function App() {
       <hr />
       
       <Historial refresh={refreshHistorial} />
+      <Ejercicios />
     </div>
   )
 }
