@@ -1,16 +1,6 @@
 import {useMemo} from "react"
 import { ejerciciosPorDia } from "../data/ejercicios"
 
-function barraProgreso (pct) {
-    //pct: 0 a 100
-    const filled = Math.round(pct / 10)
-    let s = ""
-    for (let i = 0; i < 10; i++) {
-        s+= i < filled ? "◉" : "○"
-    }
-    return s
-}
-
 function Historial ({refresh}) {
     const sesiones =useMemo (() => {
         const result = []
@@ -19,7 +9,10 @@ function Historial ({refresh}) {
         const key = localStorage.key(i)
 
         if (key.startsWith ("Dia entreno -")) {
-            const [, fecha, dia] = key.split("-")
+            const partes = key.split("-")
+            const fecha = partes.slice(1, 4).join("-")
+            const dia = partes.slice(4).join("-")
+
             const ejercicios = JSON.parse(localStorage.getItem(key)) || []
 
             const total = (ejerciciosPorDia[dia] || []).length
@@ -54,7 +47,6 @@ function Historial ({refresh}) {
                             Progreso: <strong>{sesion.hechos}</strong> / {sesion.total} (
                                 {sesion.pct}%)
                         </div>
-                        <div style = {{fontFamily: "monospace"}}> {barraProgreso (sesion.pct)} </div>
                     <ul>
                         {sesion.ejercicios.map((e) => (
                             <li key={e}>✅  {e}</li>

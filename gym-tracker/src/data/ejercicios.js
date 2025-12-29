@@ -1,7 +1,7 @@
 export const ejerciciosPorDia = {
     Lunes: [
-        "Pres inclinado",
-        "Copa a 2 manos",
+        "Press plano",
+        "Copa 2 manos",
         "Press inclinado",
         "Patada Triceps",
         "Peck Deck",

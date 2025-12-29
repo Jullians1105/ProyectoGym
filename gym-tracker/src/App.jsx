@@ -7,7 +7,7 @@ function App() {
   const [refreshHistorial, setRefreshHistorial] = useState (0)
 
   return (
-    <div>
+    <div style ={{maxWidth: "900px", margin: "0 auto", padding: "24px"}}>
       <h1> Gym Tracker</h1>
       <RutinaDeHoy  onSaved = {() => setRefreshHistorial ((v) => v + 1)}/>
 

@@ -27,11 +27,22 @@ function RutinaDeHoy({onSaved}) {
     
     
     const storageKey = `Dia entreno -${fechaISO}-${diaNombre}`
+    const pesosDiaKey = `PesosDia-${fechaISO}-${diaNombre}`
 
     const [completados, setCompletados] = useState (() => {
         const guardado = localStorage.getItem(storageKey)
         return guardado ? JSON.parse(guardado) : []
     })
+
+    const [pesosHoy, setPesosHoy] = useState (() => {
+        const guardado = localStorage.getItem(pesosDiaKey)
+        return guardado ? JSON.parse (guardado) : {}
+    })
+
+        useEffect (() => {
+        localStorage.setItem(pesosDiaKey, JSON.stringify(pesosHoy))
+        if (onSaved) onSaved()
+    }, [pesosDiaKey, pesosHoy, onSaved])
 
     const total = rutina.length
     const hechos = completados.length
@@ -66,6 +77,7 @@ function RutinaDeHoy({onSaved}) {
             <ul>
                 {rutina.map((item) => {
                     const hecho = completados.includes(item)
+                    const dataPeso= pesosHoy[item] || {tipo: "Mancuerna", valor: ""}
                     return (
                         <li 
                             key={item}
@@ -83,6 +95,32 @@ function RutinaDeHoy({onSaved}) {
                             }}
                         >
                             {hecho ? "✅ " : "⬜ "} {item}
+
+                            <div style={{marginTop: "6px", display: "Flex", gap: "8px"}}>
+                                <select
+                                    Value={dataPeso.tipo}
+                                    onChange = {(e) => {
+                                        const nuevo = {...pesosHoy, [item]: {... dataPeso, tipo: e.target.value}}
+                                        setPesosHoy (nuevo)
+                                    }}
+                                >
+                                    <option value = "Mancuerna">Mancuerna</option>
+                                    <option value = "Barra">Barra</option>
+                                    <option value = "Máquina">Máquina</option>
+                                    <option value = "Polea">Polea</option>
+                                </select>
+
+                                <input
+                                    type="number"
+                                    placeholder="Peso en libras"
+                                    value={dataPeso.valor}
+                                    onChange={(e) => {
+                                        const nuevo = {...pesosHoy, [item]: {...dataPeso, valor: e.target.value}}
+                                        setPesosHoy(nuevo)
+                                    }}
+                                    style={{width: "120px"}}
+                                />
+                            </div>
                         </li>
                     )
                 })}
