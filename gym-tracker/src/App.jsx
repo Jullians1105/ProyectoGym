@@ -1,35 +1,68 @@
-import  {useState} from "react";
-import RutinaDeHoy from "./components/RutinaDeHoy";
-import Historial from "./components/Historial";
+import  {useState, useCallback,} from "react";
+import {NavLink,Routes,Route, Navigate} from "react-router-dom";
+
+import Hoy from "./pages/Hoy";
+import HistorialPage from "./pages/HistorialPage";
 import "./App.css";
-// import Ejercicios from "./components/Ejercicios";
 
-function App() {
+export default function App() {
+  const [refreshHistorial, setRefreshHistorial] = useState (0);
+  const onSaved = useCallback(() => {
+    setRefreshHistorial((v) => v + 1)
+  }, []);
 
-  const [refreshHistorial, setRefreshHistorial] = useState (0)
+    return (
+      <div style={{maxWidth: "900px", margin: "0 auto", padding: "24px"}}>
+        <h1>Gym Tracker</h1>
 
-  return (
-    <div className="app">
-      <div className="container">
-        <div className="header">
-          <h1 className="title">Gym Tracker</h1>
-          <p className="subtitle"> Rutina + Historial + Pesos (local)</p>
+        {/* Menú */}
+        <div style={{display: "flex", grap: "12px", marginBottom: "16px"}}>
+          <NavLink
+            to = "/hoy"
+            style = {({isActive}) => ({
+              textDecoration: "none",
+              padding: "8px 12px",
+              borderRadius: "10px",
+              background: isActive ? "#2a2f3a" : "#151821",
+              color: "white",
+            })}
+          >
+            Hoy
+          </NavLink>
+
+          <NavLink
+            to = "/historial"
+            style = {({isActive}) => ({
+              textDecoration: "none",
+              padding: "8px 12px",
+              borderRadius: "10px",
+              background: isActive ? "#2a2f3a" : "#151821",
+              color: "white",
+            })}
+          >
+            Historial
+          </NavLink>
         </div>
-
-        <div className="grid">
-          <div className="card">
-            <RutinaDeHoy onSaved={() => setRefreshHistorial((v) => v + 1)} />
-          </div>
-
-          <div className="card">
-            <Historial refresh={refreshHistorial} />
-          </div>
-    </div>
-
-    {/* aqui se podria meter otra tarjeta (ejercicios) */}
-  </div>
-</div>
+            {/* Rutas */}
+        <Routes>
+          <Route 
+            path = "/hoy" 
+            element = {
+              <Hoy onSaved={onSaved}/>
+            } 
+          />
+          <Route
+            path = "/historial"
+            element = {
+              <HistorialPage 
+                refresh = {refreshHistorial} />
+            }
+          />
+          {/* Si entras a /, te manda a /hoy */}
+          <Route path = "/" element = {<Navigate to = "/hoy" replace />} />
+          <Route path = "*" element = {<Navigate to = "/hoy" replace />} />
+        </Routes>
+      </div>
   );
 }
-
-export default App;
+// import Ejercicios from "./components/Ejercicios";
