@@ -15,11 +15,14 @@ function Historial ({refresh}) {
 
             const ejercicios = JSON.parse(localStorage.getItem(key)) || []
 
+            const pesosKey= `PesosDia-${fecha}-${dia}`
+            const pesos= JSON.parse(localStorage.getItem(pesosKey)) || {}
+
             const total = (ejerciciosPorDia[dia] || []).length
             const hechos = ejercicios.length
             const pct = total > 0 ? Math.round ((hechos / total) * 100) : 0
 
-            result.push({fecha, dia, ejercicios, total, hechos, pct})
+            result.push({fecha, dia, ejercicios, pesos, total, hechos, pct})
         }
     }
 
@@ -29,7 +32,7 @@ function Historial ({refresh}) {
 }, [refresh])
 
     return (
-        <div>
+        <div className="historial">
             <h2>Historial de entrenamientos</h2>
 
             {sesiones.length === 0 && <p> No hay entrenamientos aún</p>}
@@ -47,11 +50,21 @@ function Historial ({refresh}) {
                             Progreso: <strong>{sesion.hechos}</strong> / {sesion.total} (
                                 {sesion.pct}%)
                         </div>
-                    <ul>
-                        {sesion.ejercicios.map((e) => (
-                            <li key={e}>✅  {e}</li>
-                        ))}
-                    </ul>
+
+                        {sesion.ejercicios.map ((e) => {
+                            const p = sesion.pesos?.[e]
+                            return (
+                                <li key={e}>
+                                    ✅ {e}
+                                    {p?.valor !== "" && p?.valor != null ? (
+                                        <span style={{opacity: 0.85}}>
+                                        {" "}- {p.tipo}: {p.valor} lbs
+                                    </span>
+                                    ) : null}
+                                </li>
+                            )
+                        })}
+
                 </div>
             ))}
         </div>

@@ -78,27 +78,39 @@ function RutinaDeHoy({onSaved}) {
                 {rutina.map((item) => {
                     const hecho = completados.includes(item)
                     const dataPeso= pesosHoy[item] || {tipo: "Mancuerna", valor: ""}
-                    return (
-                        <li 
-                            key={item}
-                            onClick={() => {
-                            if (hecho) {
-                                    setCompletados(completados.filter((e) => e !== item))
-                                } else {
-                                    setCompletados([...completados, item])
-                                }
-                            }}
-                            style={{
-                                cursor: "pointer",
-                                textDecoration: hecho ? "line-through" : "none",
-                                color: hecho ? "gray" : "white",
-                            }}
-                        >
-                            {hecho ? "✅ " : "⬜ "} {item}
 
-                            <div style={{marginTop: "6px", display: "Flex", gap: "8px"}}>
+                    const toggle = () => {
+                        if (hecho) {
+                            setCompletados(completados.filter((e) => e !== item))
+                        } else {
+                            setCompletados([...completados, item])
+                        }
+                    }
+
+                    return (
+                        <li key={item} style ={{padding: "6px 0"}}>
+                            <button
+                                onClick={toggle}
+                                className="btn"
+                                style = {{
+                                    padding: "6px 10px",
+                                    marginRight: "10px",
+                                    background: "transparent",
+                                    border: "1px solid rgba(255,255,255,0.12)",
+                                }}
+                            >
+                                {hecho ? "✅" : "⬜"}
+                            </button>
+
+                            <span style={{textDecoration: hecho ? "line-through" : "none", color: hecho ? "gray" : "white"}}>
+                                {item}
+                            </span>
+
+                            <div style={{marginTop: "6px", display: "Flex", gap: "8px"}}
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 <select
-                                    Value={dataPeso.tipo}
+                                    value={dataPeso.tipo}
                                     onChange = {(e) => {
                                         const nuevo = {...pesosHoy, [item]: {... dataPeso, tipo: e.target.value}}
                                         setPesosHoy (nuevo)
