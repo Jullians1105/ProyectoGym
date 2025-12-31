@@ -1,5 +1,6 @@
 import  {useState, useCallback,} from "react";
 import {NavLink,Routes,Route, Navigate} from "react-router-dom";
+import Rutina from "./pages/Rutina";
 
 import Hoy from "./pages/Hoy";
 import HistorialPage from "./pages/HistorialPage";
@@ -28,6 +29,19 @@ export default function App() {
             })}
           >
             Hoy
+          </NavLink>
+            
+          <NavLink
+            to="/rutina"
+            style = {({isActive}) => ({
+              textDecoration: "none",
+              padding: "8px 12px",
+              borderRadius: "10px",
+              background: isActive ? "#2a2f3a" : "#151821",
+              color: "white",
+            })}
+          >
+            Rutina
           </NavLink>
 
           <NavLink
@@ -58,6 +72,8 @@ export default function App() {
                 refresh = {refreshHistorial} />
             }
           />
+
+          <Route path= "/rutina" element = {<Rutina />} />
           {/* Si entras a /, te manda a /hoy */}
           <Route path = "/" element = {<Navigate to = "/hoy" replace />} />
           <Route path = "*" element = {<Navigate to = "/hoy" replace />} />

@@ -21,7 +21,8 @@ function RutinaDeHoy({onSaved}) {
     const dd = String(hoy.getDate()).padStart(2, "0")
     const fechaISO = `${yyyy}-${mm}-${dd}` // "2025-06-15"
     
-    const rutina = ejerciciosPorDia[diaNombre] || ["Descanso"];
+    const rutinaSemanal=JSON.parse(localStorage.getItem("RutinaSemanal") || "null");
+    const rutina = (rutinaSemanal?.[diaNombre]) || ejerciciosPorDia[diaNombre] || ["Descanso"];
 
 
     
