@@ -1,49 +1,100 @@
 import {useMemo} from "react"
 import { ejerciciosPorDia } from "../data/ejercicios"
 
+const normFecha = (s) => String (s ?? "").trim();
+
+const normDia = (s) =>
+    String (s ?? "")
+        .trim()
+        .replace(/^[\s-]+/, "")   // quita guiones/espacios al inicio
+        .replace(/[\s-]+$/, "")   // quita guiones/espacios al final
+        .replace(/\s+/g, " ");    // espacios dobles -> 1
+
+function parseDiaEntreoKey (key) {
+    //"Dia entreno - 2023 - 09 - 15  Lunes"
+    const m = key.match(/^Dia entreno -\s*(\d{4}-\d{2}-\d{2})\s*-\s*(.+)\s*$/);
+    if(!m) return null;
+    return {fecha: normFecha(m[1]), dia: normDia(m[2])};
+}
+
 function Historial ({refresh}) {
-    const sesiones =useMemo (() => {
-        const result = []
 
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
+    const especiales = useMemo(() => {
+    const map = {};
 
-        if (key.startsWith ("Dia entreno -")) {
-            const partes = key.split("-")
-            const fecha = partes.slice(1, 4).join("-")
-            const dia = partes.slice(4).join("-")
+    Object.keys (localStorage)
+        .filter((k) => k.startsWith ("SesionEspecial-"))
+        .forEach((k) => {
+            const obj = JSON.parse (localStorage.getItem (k) || "null");
+            if (!obj) return;
 
-            const ejercicios = JSON.parse(localStorage.getItem(key)) || []
+            const fechaKey = normFecha(k.replace("SesionEspecial-", ""));
+            const desde = (obj.reprogramadoDesde || obj.desde)?.trim();
 
-            const pesosKey= `PesosDia-${fecha}-${dia}`
-            const pesos= JSON.parse(localStorage.getItem(pesosKey)) || {}
+            const cleaned = {
+                ...obj,
+                reprogramadoDesde: desde || fechaKey,
+                nuevaFecha: normFecha(obj.nuevaFecha),
+                diaRutina: normDia(obj.diaRutina),
+            };
 
-            const total = (ejerciciosPorDia[dia] || []).length
-            const hechos = ejercicios.length
-            const pct = total > 0 ? Math.round ((hechos / total) * 100) : 0
+            //1. indexar por fecha del key
+            if(fechaKey) map[fechaKey] = cleaned;
 
-            result.push({fecha, dia, ejercicios, pesos, total, hechos, pct})
-        }
-    }
+            //2. indexar por fecha "desde" que es la original, si aplica
 
-    // Ordenar por fecha, de más reciente a más antigua
-    result.sort ((a,b) => b.fecha.localeCompare(a.fecha))
-    return result
-}, [refresh])
-
-
-                const especiales = useMemo(() => {
-                    const map = {};
-                Object.keys (localStorage)
-                .filter((k) => k.startsWith ("SesionEspecial-"))
-                .forEach((k) => {
-                    const obj = JSON.parse (localStorage.getItem (k) || "null");
-                    if (!obj) return;
-                    const desde = obj.reprogramadoDesde || obj.desde;
-                if (desde) map[desde] = obj;
-            });
+            if (desde) map[desde] = cleaned;
+        });
     return map;
 }, [refresh]);
+
+    const sesiones =useMemo (() => {
+        const sesionesMap= new Map();
+
+        //1. sesiones normales
+        for (let i= 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key.startsWith("Dia entreno -")) continue;
+
+            const parsed = parseDiaEntreoKey (key);
+            if (!parsed) continue;
+
+            const {fecha, dia} = parsed;
+
+            const ejercicios= JSON.parse(localStorage.getItem(key) || "[]") || [];
+            const pesosKey = `PesosDia-${fecha}-${dia}`;
+            const pesos = JSON.parse(localStorage.getItem(pesosKey) || "{}") || {};
+
+            const total = (ejerciciosPorDia[dia] || []).length;
+            const hechos = ejercicios.length;
+            const pct = total > 0 ? Math.round((hechos / total)*100) : 0;
+            
+            sesionesMap.set (fecha, {fecha, dia, ejercicios, pesos, total, hechos, pct})
+        }
+
+        //2. placeholders para especiales que no tengan sesion normal ese dia
+        Object.entries(especiales).forEach(([fechaOriginal, sp]) => {
+            if (sesionesMap.has(fechaOriginal)) return;
+
+            const dia= sp.diaRutina || "Día";
+            const total = (ejerciciosPorDia[dia] || []).length;
+
+            sesionesMap.set (fechaOriginal, {
+                fecha: fechaOriginal,
+                dia,
+                ejercicios: [],
+                pesos: {},
+                total,
+                hechos: 0,
+                pct: 0,
+                _placeholder: true,
+            });
+        });
+
+        const result = Array.from(sesionesMap.values());
+        result.sort((a,b) => b.fecha.localeCompare(a.fecha));
+        return result;
+}, [refresh, especiales])
 
     return (
         <div className="historial">
@@ -57,9 +108,6 @@ function Historial ({refresh}) {
 
                 const special = especiales[sesion.fecha] || null;
 
-
-
-
                 return (
                     <div
                     key={`${sesion.fecha}-${sesion.dia}`}
@@ -71,29 +119,28 @@ function Historial ({refresh}) {
 
                         {special && (
                             <p style={{color: "#facc15", margin: "4px 0"}}>
-                                Reprogramado para {special.nuevaFecha} → {special.nuevaFecha}
+                                Reprogramado para {special.nuevaFecha}
                             </p>
                         )}
                         <div>
-                            Progreso: <strong>{sesion.hechos}</strong> / {sesion.total} (
-                                {sesion.pct}%)
+                            Progreso: <strong>{sesion.hechos}</strong> / {sesion.total} ({sesion.pct}%)
                         </div>
-                    <ul>
+                        <ul>
                             {sesion.ejercicios.map ((e) => {
-                            const p = sesion.pesos?.[e]
+                                const p = sesion.pesos?.[e];
 
-                            return (
-                                <li key={e}>
-                                    ✅ {e}
-                                    {p?.valor !== "" && p?.valor != null ? (
-                                        <span style={{opacity: 0.85}}>
-                                        {" "}- {p.tipo}: {p.valor} lbs
-                                    </span>
-                                    ) : null}
-                                </li>
-                            )
-                        })}
-                    </ul>
+                                return (
+                                    <li key={e}>
+                                        ✅ {e}
+                                        {p?.valor !== "" && p?.valor != null ? (
+                                            <span style={{opacity: 0.85}}>
+                                            {" "}- {p.tipo}: {p.valor} lbs
+                                        </span>
+                                        ) : null}
+                                    </li>
+                                )
+                            })}
+                        </ul>
                 </div>
             )})}
         </div>
