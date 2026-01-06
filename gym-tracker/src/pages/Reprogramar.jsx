@@ -3,6 +3,13 @@ import {useEffect, useState} from "react";
 const pendientesKey = "PendientesEntreno";
 
 export default function Reprogramar (){
+
+    const [toast,setToast] = useState (null);
+    function showToast(message, type = "Cambios guardados") {
+        setToast({message, type});
+        setTimeout(() => setToast(null),2200);
+    }
+
     const [pendientes, setPendientes] = useState(() => {
         const guardado= localStorage.getItem(pendientesKey);
         return guardado ? JSON.parse(guardado) : [];
@@ -33,6 +40,28 @@ export default function Reprogramar (){
     }
 
     return(
+        <>
+        {toast && (
+            <div
+                style={{
+                    position: "fixed",
+                    top: "16px",
+                    left: "50%",
+                    transform: "transLatex(-50%)",
+                    padding: "12px 16px",
+                    borderRadius: "12px",
+                    background: toast.type === "success" ? "#16a34a" : "dc2626",
+                    color: "white",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+                    zIndex: 9999,
+                    fontWeight: 600,
+                    letterSpacing: "0.2px",
+                }}
+            >
+                {toast.message}
+            </div>
+        )}
+
         <div>
             <h2>Reprogramar entrenos pendientes</h2>
             {pendientes.length === 0 &&<p>No hay entrenos pendientes para reprogramar.</p>}
@@ -49,7 +78,9 @@ export default function Reprogramar (){
                                 <input 
                                     type="date"
                                     value={fechaObjetivo}
-                                    onChange={(e) => setFechaObjetivo(e.target.value)}
+                                    onChange={(e) => {setFechaObjetivo(e.target.value);
+                                        showToast("Fecha Seleccionada ", "success");
+                                    }}
                                     style={{
                                         background: "rgba(255,255,255,0.07)",
                                         border: "1px solid rgba(255,255,255,0.08)",
@@ -59,7 +90,15 @@ export default function Reprogramar (){
                                     }}
                                 />
 
-                                <button className="btn" onClick={() => aplicar(p)}>
+                                <button className="btn" onClick={() => {
+                                    if (!fechaObjetivo) {
+                                        showToast("Seleccione una fecha válida ⚠️", "error");
+                                        return;
+                                    }
+
+                                    aplicar (p);
+                                    showToast("Entreno reprogramado con éxito ✅", "success");
+                                }}>
                                     Reprogramar
                                 </button>
                             </div>
@@ -67,5 +106,7 @@ export default function Reprogramar (){
                     ))}
                 </div>
         </div>
+        </>
+        
     )
 }
