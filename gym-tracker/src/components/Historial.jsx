@@ -1,4 +1,4 @@
-import {useMemo} from "react"
+import {useMemo, useState} from "react"
 import { ejerciciosPorDia } from "../data/ejercicios"
 
 const normFecha = (s) => String (s ?? "").trim();
@@ -17,7 +17,7 @@ function parseDiaEntreoKey (key) {
     return {fecha: normFecha(m[1]), dia: normDia(m[2])};
 }
 
-function Historial ({refresh}) {
+function Historial ({refresh, setRefresh}) {
 
     const especiales = useMemo(() => {
     const map = {};
@@ -96,15 +96,68 @@ function Historial ({refresh}) {
         return result;
 }, [refresh, especiales])
 
+    const [q, setQ] = useState ("");
+    const [desde, setDesde] = useState ("");
+    const [hasta, setHasta] = useState ("");
+
+                const sesionesFiltradas = sesiones.filter((s) => {
+                if (desde && s.fecha < desde) return false;
+                if (hasta && s.fecha > hasta) return false;
+
+                if(q.trim()){
+                    const needle = q.trim().toLowerCase();
+                    const enDia=
+                        s.dia.toLoweCase().includes(needle) ||
+                        s.ejercicios.some((e) => e.toLowerCase().includes(needle));
+
+                    if (!enDia) return false;
+                }
+
+                return true;
+            })
+
     return (
         <div className="historial">
             <h2>Historial de entrenamientos</h2>
 
+            <div
+            style={{display: "flex", gap: 10, flexWrap: "wrap", margin: "12px 0"}}>
+                <input
+                placeholder="Buscar Ejercicio"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                style={{padding: "10px 12px", borderRadius: 10, width: 260}}
+                />
+
+                <input
+                type="date"
+                value={desde}
+                onChange={(e) => setDesde(e.target.value)}
+                style={{padding: "10px 12px", borderRadius: 10}}
+                />
+
+                <input
+                type="date"
+                value={hasta}
+                onChange={(e) => setHasta(e.target.value)}
+                style={{padding: "10px 12px", borderRadius: 10}}
+                />
+
+                <button
+                className="btn"
+                onClick={() => {
+                    setQ("");
+                    setDesde("");
+                    setHasta("");
+                }}
+                >
+                    Limpiar filtros
+                </button>
+            </div>
+
             {sesiones.length === 0 && <p> No hay entrenamientos aún</p>}
 
-            
-
-            {sesiones.map((sesion) => {
+            {sesionesFiltradas.map((sesion) => {
 
                 const special = especiales[sesion.fecha] || null;
 
@@ -122,9 +175,38 @@ function Historial ({refresh}) {
                                 Reprogramado para {special.nuevaFecha}
                             </p>
                         )}
+
+                        <button
+                        className="btn"
+                        onClick={() => {
+                            const k= `SesionEspecial-${sesion.fecha}`;
+                            localStorage.removeItem(k);
+                        }}
+                        style={{marginTop: "6px"}}
+                        >
+                            Eliminar reprogramación
+                        </button>
+
                         <div>
                             Progreso: <strong>{sesion.hechos}</strong> / {sesion.total} ({sesion.pct}%)
                         </div>
+
+                        <button
+                        className="btn"
+                        onClick={() => {
+                            const entrenoKey = `Dia entreno -${sesion.fecha}-${sesion.dia}`;
+                            const pesosKey= `PesosDia-${sesion.fecha}-${sesion.dia}`;
+                            setRefresh ((v) => v + 1);
+
+                            localStorage.removeItem(entrenoKey);
+                            localStorage.removeItem(pesosKey);
+                            localStorage.removeItem(`SesionEspecial-${sesion.fecha}`);
+                        }}
+                        style={{marginTop: "6px", marginLeft: "8px"}}
+                        >
+                            Borrar dia
+                        </button>
+                        
                         <ul>
                             {sesion.ejercicios.map ((e) => {
                                 const p = sesion.pesos?.[e];

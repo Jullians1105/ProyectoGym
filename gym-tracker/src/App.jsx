@@ -82,7 +82,9 @@ export default function App() {
             path = "/historial"
             element = {
               <HistorialPage 
-                refresh = {refreshHistorial} />
+                refresh = {refreshHistorial}
+                setRefresh ={setRefreshHistorial}
+                />
             }
           />
 
