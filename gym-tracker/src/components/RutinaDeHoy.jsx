@@ -2,7 +2,17 @@ import { ejerciciosPorDia } from "../data/ejercicios";
 import { useEffect,useState } from "react";
 
 function RutinaDeHoy({onSaved}) {
-    const hoy = new Date();
+
+    const [toast, setToast] = useState (null);
+    function showToast (message, type = "Ya puedes Reagendar") {
+        setToast ({message, type});
+        setTimeout (() => setToast (null), 2200);
+    }
+
+
+
+
+
 
     const dias = [
         "Domingo",
@@ -14,8 +24,9 @@ function RutinaDeHoy({onSaved}) {
         "Sábado",
     ];
 
+    
+    const hoy = new Date();
     const diaNombre = dias[hoy.getDay()];
-
     const yyyy = hoy.getFullYear()
     const mm = String(hoy.getMonth () + 1).padStart (2, "0")
     const dd = String(hoy.getDate()).padStart(2, "0")
@@ -29,6 +40,10 @@ function RutinaDeHoy({onSaved}) {
 
     const pendientesKey = "PendientesEntreno"
     const sesionEspecialKey = `SesionEspecial-${fechaISO}`
+
+        const [hoyPendiente, setHoyPendiente] = useState (() => {
+        return localStorage.getItem (sesionEspecialKey) !== null;
+    });
 
     const sesionEspecial = JSON.parse(localStorage.getItem(sesionEspecialKey) || "null")
 
@@ -82,19 +97,55 @@ function RutinaDeHoy({onSaved}) {
                 Fecha: <strong>{fechaISO}</strong>
             </p>
 
+
+            <p>
+                Progreso hoy: <strong>{hechos}</strong> / {total} ({pct}%)
+            </p>
+
             {reprogramadoDesde ? (
                 <p className="small">
                     Reprogramado desde: <strong>{reprogramadoDesde}</strong>
                 </p>
             ): null}
 
-            <p>
-                Progreso hoy: <strong>{hechos}</strong> / {total} ({pct}%)
-            </p>
+            {toast && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top:"16px",
+                        left: "50%",
+                        transform: "transLatex(-50%)",
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        background: toast.type === "success" ? "#16a34a" : "dc2626",
+                        color: "white",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+                        zIndex: 9999,
+                        fontWeight: 600,
+                        letterSpacing: "0.2px",
+                    }}
+                >
+                    {toast.message}
+                </div>
+            )}
 
             <button
                 className = "btn"
                 onClick={() =>{
+                    
+                    if (localStorage.getItem (sesionEspecialKey)) return;
+
+                    localStorage.setItem(
+                        sesionEspecialKey,
+                        JSON.stringify ({ 
+                            diaRutina: diaNombre,
+                            fechaOriginal: fechaISO,
+                        })
+                    )
+
+                    setHoyPendiente (true);
+                    showToast ("Ya puedes Reagendar", "success");
+
                     const yaExiste=pendientes.some((p) => p.fecha === fechaISO)
                     if (yaExiste) return
 
@@ -106,6 +157,8 @@ function RutinaDeHoy({onSaved}) {
             >
                 Hoy no entrené, reprogramar
             </button>
+
+            {hoyPendiente && <p className="small">Listo para reprogramar</p>}
 
             <p>Te toca:</p>
 

@@ -17,7 +17,9 @@ function parseDiaEntreoKey (key) {
     return {fecha: normFecha(m[1]), dia: normDia(m[2])};
 }
 
-function Historial ({refresh, setRefresh}) {
+function Historial ({refresh}) {
+
+    const [localRefresh, setLocalRefresh] = useState (0);
 
     const especiales = useMemo(() => {
     const map = {};
@@ -46,7 +48,7 @@ function Historial ({refresh, setRefresh}) {
             if (desde) map[desde] = cleaned;
         });
     return map;
-}, [refresh]);
+}, [refresh, localRefresh]);
 
     const sesiones =useMemo (() => {
         const sesionesMap= new Map();
@@ -181,6 +183,7 @@ function Historial ({refresh, setRefresh}) {
                         onClick={() => {
                             const k= `SesionEspecial-${sesion.fecha}`;
                             localStorage.removeItem(k);
+                            setLocalRefresh((v) => v + 1);
                         }}
                         style={{marginTop: "6px"}}
                         >
@@ -196,11 +199,10 @@ function Historial ({refresh, setRefresh}) {
                         onClick={() => {
                             const entrenoKey = `Dia entreno -${sesion.fecha}-${sesion.dia}`;
                             const pesosKey= `PesosDia-${sesion.fecha}-${sesion.dia}`;
-                            setRefresh ((v) => v + 1);
-
                             localStorage.removeItem(entrenoKey);
                             localStorage.removeItem(pesosKey);
                             localStorage.removeItem(`SesionEspecial-${sesion.fecha}`);
+                            setLocalRefresh((v) => v + 1);
                         }}
                         style={{marginTop: "6px", marginLeft: "8px"}}
                         >
